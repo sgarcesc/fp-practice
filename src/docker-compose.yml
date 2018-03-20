@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  pingapplication:
+    image: pingapplication
+    build:
+      context: .
+      dockerfile: PingApplication/Dockerfile
+
+  pongapplication:
+    image: pongapplication
+    build:
+      context: .
+      dockerfile: PongApplication/Dockerfile
+
