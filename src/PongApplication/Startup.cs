@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using MyNatsClient;
 
 namespace PongApplication
@@ -25,6 +21,7 @@ namespace PongApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMemoryCache();
             services.AddMvc();
         }
 
@@ -39,13 +36,26 @@ namespace PongApplication
             app.UseMvc();
 
             //Configure the NATS client connection
-            var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"));
+            var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"))
+            {
+                AutoReconnectOnFailure = true,
+                AutoRespondToPing = true,
+                RequestTimeoutMs = (int)TimeSpan.FromSeconds(5).TotalMilliseconds
+            };
             var client = new NatsClient("request-response", cnInfo);
             client.Connect();
 
+            var cache = app.ApplicationServices.GetService<IMemoryCache>();
+            int numberOfRequestsProcessed = 0;
             await client.SubWithHandlerAsync("mensaje-emitido", msg =>
             {
+                //Set the number of requests processed
+                cache.Set("mensaje-emitido", ++numberOfRequestsProcessed);
+
+                //simulate a workload
                 Thread.Sleep((int)TimeSpan.FromSeconds(2).TotalMilliseconds);
+
+                //Reponse
                 client.Pub(msg.ReplyTo, "PONG_MESSAGE");
             });
         }

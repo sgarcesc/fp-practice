@@ -1,19 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using MyNatsClient;
 
 namespace PongApplication.Controllers
 {
     [Route("[controller]")]
     public class PongController : Controller
     {
-        // GET api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IMemoryCache _cache;
+
+        public PongController(IMemoryCache memoryCache)
         {
-            return new string[] { "value1", "value2" };
+            _cache = memoryCache;
+        }
+
+        [HttpGet]
+        public int Get()
+        {
+            _cache.TryGetValue("mensaje-emitido", out int numberOfRequestsProcessed);
+            return numberOfRequestsProcessed;
         }
     }
 }
