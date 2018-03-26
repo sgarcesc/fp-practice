@@ -21,6 +21,15 @@ namespace PongApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"))
+            {
+                AutoReconnectOnFailure = true,
+                AutoRespondToPing = true,
+                RequestTimeoutMs = (int)TimeSpan.FromMinutes(5).TotalMilliseconds
+            };
+            var client = new NatsClient("request-response", cnInfo);
+            client.Connect();
+            services.AddSingleton<INatsClient>(client);
             services.AddMemoryCache();
             services.AddMvc();
         }
@@ -35,16 +44,9 @@ namespace PongApplication
 
             app.UseMvc();
 
-            //Configure the NATS client connection
-            var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"))
-            {
-                AutoReconnectOnFailure = true,
-                AutoRespondToPing = true,
-                RequestTimeoutMs = (int)TimeSpan.FromMinutes(5).TotalMilliseconds
-            };
-            var client = new NatsClient("request-response", cnInfo);
-            client.Connect();
-
+            
+            
+            var client = app.ApplicationServices.GetService<INatsClient>();
             var cache = app.ApplicationServices.GetService<IMemoryCache>();
             int numberOfRequestsProcessed = 0;
             await client.SubWithHandlerAsync("mensaje-emitido", msg =>
