@@ -10,7 +10,7 @@ namespace PingApplication.Controllers
     public class PingController : Controller
     {
         [HttpGet]
-        public async Task<string> Put(CancellationToken cancellationToken)
+        public async Task<string> Get()
         {
             var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"))
             {
