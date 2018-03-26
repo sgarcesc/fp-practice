@@ -40,7 +40,7 @@ namespace PongApplication
             {
                 AutoReconnectOnFailure = true,
                 AutoRespondToPing = true,
-                RequestTimeoutMs = (int)TimeSpan.FromSeconds(5).TotalMilliseconds
+                RequestTimeoutMs = (int)TimeSpan.FromMinutes(1).TotalMilliseconds
             };
             var client = new NatsClient("request-response", cnInfo);
             client.Connect();
