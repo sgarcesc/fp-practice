@@ -9,22 +9,17 @@ namespace PingApplication.Controllers
     [Route("[controller]")]
     public class PingController : Controller
     {
+        private readonly INatsClient _client;
+        public PingController(INatsClient client)
+        {
+            _client = client;
+        }
+
         [HttpGet]
         public async Task<string> Get()
         {
-            var cnInfo = new ConnectionInfo(new Host("nats.cloudapp.net"))
-            {
-                AutoReconnectOnFailure = true,
-                AutoRespondToPing = true,
-                RequestTimeoutMs = (int)TimeSpan.FromMinutes(1).TotalMilliseconds
-            };
-            using (var client = new NatsClient("request-response", cnInfo))
-            {
-                client.Connect();
-                var response = await client.RequestAsync(subject: "mensaje-emitido", body: "PING_MESSAGE");
-                client.Disconnect();
-                return response.GetPayloadAsString();
-            }
+            var response = await _client.RequestAsync(subject: "mensaje-emitido", body: "PING_MESSAGE");
+            return response.GetPayloadAsString();
         }
     }
 }
